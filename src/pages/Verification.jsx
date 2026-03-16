@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle2, CloudLightning } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useStore } from '../store';
+
+const API_BASE = 'http://localhost:4000';
 
 export default function Verification() {
   const navigate = useNavigate();
   const { activeUser, scannedBooks, addToQueue, clearSession } = useStore();
   const [submitting, setSubmitting] = useState(false);
 
-  // Return to start if session is invalid
   if (!activeUser || scannedBooks.length === 0) {
     navigate('/');
     return null;
@@ -17,33 +18,36 @@ export default function Verification() {
 
   const handleApprove = async () => {
     setSubmitting(true);
-    
-    // Construct the payload as per standard multi-book workflow
+
     const payload = {
-      id: crypto.randomUUID(), // For local queue identification
-      userID: activeUser,
+      id: crypto.randomUUID(),
+      studentId: activeUser,
       books: scannedBooks.map(b => ({
+        bookId: b.bookID || b.rfidTagID,
         rfidTagID: b.rfidTagID,
-        bookID: b.bookID,
-        transactionType: b.transactionType
+        title: b.title || 'Unknown Title',
+        transactionType: b.transactionType,
       })),
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
     if (navigator.onLine) {
-      // Mock API call to Vigyan server format
       try {
-        // In a real app, you would fetch `POST /api/transactions/batch` or similar.
-        // For now, we simulate network delay:
-        await new Promise((r) => setTimeout(r, 800));
-        toast.success('Transaction synchronized with server!');
+        const res = await fetch(`${API_BASE}/api/transactions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Server error');
+        toast.success(`Transaction saved! ${data.count} book(s) recorded.`);
       } catch (err) {
-        toast.error('Network failed. Saved offline.');
+        toast.error(`Backend unavailable. Saved offline. (${err.message})`);
         addToQueue(payload);
       }
     } else {
       addToQueue(payload);
-      toast.success('Saved locally for offline syncing.');
+      toast.success('Saved locally — will sync when online.');
     }
 
     setSubmitting(false);
@@ -59,25 +63,26 @@ export default function Verification() {
       </div>
 
       <div className="glass-card mb-4">
-        <h2 className="text-sm font-bold text-secondary mb-2 uppercase">User ID</h2>
-        <p className="font-mono bg-black/30 p-2 rounded border border-white/5 break-all">{activeUser}</p>
+        <h2 className="text-sm font-bold text-secondary mb-2 uppercase">Student / User ID</h2>
+        <p className="font-mono bg-black/30 p-2 rounded border border-white/5 break-all" style={{ fontSize: '0.85rem' }}>{activeUser}</p>
       </div>
 
       <div className="glass-card flex-1 overflow-y-auto min-h-[30vh]">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-sm font-bold text-secondary uppercase">Items ({scannedBooks.length})</h2>
         </div>
-        
         <div className="flex flex-col gap-2">
           {scannedBooks.map((book, idx) => (
             <div key={idx} className="flex justify-between items-start text-sm border-b border-white/5 pb-2 last:border-0 last:pb-0">
               <div>
                 <p className="font-bold">{book.title}</p>
-                <p className="text-xs text-secondary">{book.bookID}</p>
+                <p className="text-xs text-secondary">{book.bookID || book.rfidTagID}</p>
               </div>
-              <span className={`text-xs px-2 py-1 rounded font-bold ${
-                book.transactionType === 'Issue' ? 'text-blue-400 bg-blue-500/10' : 'text-orange-400 bg-orange-500/10'
-              }`}>
+              <span style={{
+                fontSize: '0.75rem', padding: '0.2rem 0.6rem', borderRadius: '999px', fontWeight: 700,
+                background: book.transactionType === 'Issue' ? 'rgba(99,102,241,0.15)' : 'rgba(251,146,60,0.15)',
+                color: book.transactionType === 'Issue' ? '#818cf8' : '#fb923c',
+              }}>
                 {book.transactionType}
               </span>
             </div>
@@ -85,22 +90,12 @@ export default function Verification() {
         </div>
       </div>
 
-      <div className="flex gap-2 w-full mt-4">
-        <button 
-          className="btn btn-danger flex-1"
-          onClick={() => navigate('/scan-books')}
-          disabled={submitting}
-        >
+      <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>
+        <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => navigate('/scan-books')} disabled={submitting}>
           Cancel
         </button>
-        <button 
-          className="btn btn-primary flex-[2]"
-          onClick={handleApprove}
-          disabled={submitting}
-        >
-          {submitting ? 'Approving...' : (
-            <>Approve & Submit <CheckCircle2 size={18}/></>
-          )}
+        <button className="btn btn-primary" style={{ flex: 2 }} onClick={handleApprove} disabled={submitting}>
+          {submitting ? 'Saving...' : <><CheckCircle2 size={18} /> Approve &amp; Submit</>}
         </button>
       </div>
     </div>

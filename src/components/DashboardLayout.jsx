@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
-import { LayoutDashboard, WifiOff, Users, BookMarked, Settings } from 'lucide-react';
+import { LayoutDashboard, WifiOff, Users, BookMarked, Settings, Search } from 'lucide-react';
 import NetworkStatus from './NetworkStatus';
 import { useStore } from '../store';
 
@@ -10,6 +10,7 @@ export default function DashboardLayout() {
   const navItems = [
     { to: '/dashboard', icon: LayoutDashboard, label: 'Overview', exact: true },
     { to: '/dashboard/queue', icon: WifiOff, label: 'Offline Queue', badge: offlineQueue.length },
+    { to: '/dashboard/search', icon: Search, label: 'Student Search' },
     { to: '#', icon: BookMarked, label: 'Inventory' },
     { to: '#', icon: Users, label: 'Students' },
     { to: '#', icon: Settings, label: 'Settings' },

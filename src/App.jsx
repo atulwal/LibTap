@@ -10,6 +10,7 @@ import Verification from './pages/Verification';
 import DashboardLayout from './components/DashboardLayout';
 import Overview from './pages/Overview';
 import OfflineQueueManager from './pages/OfflineQueueManager';
+import StudentSearch from './pages/StudentSearch';
 
 function App() {
   return (
@@ -39,6 +40,7 @@ function App() {
         <Route path="/dashboard" element={<DashboardLayout />}>
           <Route index element={<Overview />} />
           <Route path="queue" element={<OfflineQueueManager />} />
+          <Route path="search" element={<StudentSearch />} />
         </Route>
       </Routes>
       <Toaster position="bottom-center" theme="dark" />

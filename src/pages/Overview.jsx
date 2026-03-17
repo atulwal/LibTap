@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { BookOpen, AlertCircle, Clock, BookUp } from 'lucide-react';
 import { useStore } from '../store';
 
-const API_BASE = 'http://localhost:4000';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 async function fetchOverview() {
   const [overviewRes, peakRes, txnRes] = await Promise.all([

@@ -4,7 +4,7 @@ import { CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useStore } from '../store';
 
-const API_BASE = 'http://localhost:4000';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 export default function Verification() {
   const navigate = useNavigate();
